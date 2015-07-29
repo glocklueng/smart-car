@@ -7,6 +7,7 @@
 #include "usart.h"
 #include "pid.h"
 #include "motor.h"
+#include "adc.h"
 
 uint32_t left_counter  = 0;
 uint32_t right_counter = 0;
@@ -46,7 +47,7 @@ void capture_config(void)
 	TIM_ITConfig(TIM3, TIM_IT_CC4, ENABLE);
 	
 	nvic_config(TIM3_IRQn, 0);
-	TIM7_init(1000, 8400);
+	TIM7_init(500, 8400);
 }
 
 void TIM3_IRQHandler(void)
@@ -70,25 +71,25 @@ void TIM7_IRQHandler(void)
 	if(TIM_GetITStatus(TIM7, TIM_IT_Update) == SET)
 	{
 		TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
-		if(control_flag == 1){
+		if(control_flag == 1 && adc_flag == 1){
 			if(pos_flag == 1){
 				pwm1 = 0;
 				pwm2 = 0;
 				left_pos_counter += left_counter;
 				right_pos_counter += right_counter;
 				if(left_pos_counter < left_pos_target_counter){
-					pwm1 = 80*left_dir;
+					pwm1 = 90*left_dir;
 				}
 				if(right_pos_counter < right_pos_target_counter){
-					pwm2 = 80*right_dir;
-				}
-				//printf("counter:%d,%d;  pos:%d,%d;  target:%d,%d;  dir:%2.1f,%2.1f\r\n", left_counter, right_counter, left_pos_counter, right_pos_counter, left_pos_target_counter, right_pos_target_counter, left_dir, right_dir);
-				if(pwm1==0&&pwm2==0){
-					left_dir =1;
-					right_dir =1;
-					pos_flag = 0;
+					pwm2 = 90*right_dir;
 				}
 				motor_set_pwm(pwm1, pwm2);
+				//printf("counter:%d,%d;  pos:%d,%d;  target:%d,%d;  dir:%2.1f,%2.1f\r\n", left_counter, right_counter, left_pos_counter, right_pos_counter, left_pos_target_counter, right_pos_target_counter, left_dir, right_dir);
+				if(pwm1==0&&pwm2==0){
+					left_dir = 1;
+					right_dir = 1;
+					pos_flag = 0;
+				}
 			}
 			else{
 				left_speed_pid.feedback = left_counter;

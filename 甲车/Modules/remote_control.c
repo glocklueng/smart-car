@@ -2,48 +2,47 @@
 #include "usart.h"
 #include "motor.h"
 #include "stm32f4_discovery.h"
+#include "light_senser.h"
+
+uint8_t car_mode = MODE_CONNECT;
+__IO uint8_t remote_flag = 0;
 
 void remote_control_init(void)
 {
-	usart6_init(115200);
+	uart4_init(115200);
 }
 
-#define MSG_STOP	('s')
-#define MSG_FRONT	('a')
-#define MSG_BACK	('b')
-#define MSG_LEFT	('c')
-#define MSG_RIGHT	('d')
-void USART6_IRQHandler(void)
+void UART4_IRQHandler(void)
 {
-	uint8_t ch;
-	if(USART_GetFlagStatus(USART6,USART_FLAG_RXNE)==SET)
+	static uint8_t buffer[3] = {0};
+	static uint8_t counter = 0;
+	if(USART_GetFlagStatus(UART4,USART_FLAG_RXNE)==SET)
 	{
-		ch = USART_ReceiveData(USART6);
-		USART_ClearITPendingBit(USART6,USART_IT_RXNE);
-		switch(ch){
-			case MSG_STOP:
-				motor_set_pwm(0, 0);
-				STM_EVAL_LEDOff(LED3);
-				STM_EVAL_LEDOff(LED4);
-				STM_EVAL_LEDOff(LED5);
-				STM_EVAL_LEDOff(LED6);
-				break;
-			case MSG_FRONT:
-				motor_set_pwm(100, 100);
-				STM_EVAL_LEDOn(LED3);
-				break;
-			case MSG_BACK:
-				motor_set_pwm(-100, -100);
+		USART_ClearITPendingBit(UART4,USART_IT_RXNE);
+		buffer[counter] = USART_ReceiveData(UART4);
+		if(counter == 0 && buffer[0] != 'x'){
+			return;
+		}
+		counter++;
+		if(counter == 3){
+			counter = 0;
+			if(buffer[1] == '1'){
 				STM_EVAL_LEDOn(LED4);
-				break;
-			case MSG_LEFT:
-				motor_set_pwm(-90, 90);
+				car_mode = MODE_SINGLE;
+			}
+			else{
+				STM_EVAL_LEDOff(LED4);
+				car_mode = MODE_CONNECT;
+			}
+			if(buffer[2] == '1'){
 				STM_EVAL_LEDOn(LED5);
-				break;
-			case MSG_RIGHT:
-				motor_set_pwm(90, -90);
-				STM_EVAL_LEDOn(LED6);
-				break;
+				running_state = STATE_START;
+			}
+			else{
+				STM_EVAL_LEDOff(LED5);
+				running_state = STATE2;
+			}
+			remote_flag = 1;
 		}
 	}
 }

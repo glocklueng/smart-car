@@ -41,11 +41,11 @@ void uart4_init(uint32_t baudRate)
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 	USART_Init(UART4, &USART_InitStructure); 
-	//USART_ITConfig(UART4, USART_IT_RXNE,ENABLE);
+	USART_ITConfig(UART4, USART_IT_RXNE,ENABLE);
 	USART_Cmd(UART4, ENABLE);
 	USART_ClearFlag(UART4, USART_FLAG_TC);
 	
-	//nvic_config(UART4_IRQn, 4);
+	nvic_config(UART4_IRQn, 4);
 }
 
 void usart6_init(uint32_t baudRate)
@@ -64,11 +64,14 @@ void usart6_init(uint32_t baudRate)
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 	USART_Init(USART6, &USART_InitStructure); 
-	//USART_ITConfig(USART6, USART_IT_RXNE,ENABLE);
+#ifndef DEBUG_HAHA
+	USART_ITConfig(USART6, USART_IT_RXNE,ENABLE);
+#endif
 	USART_Cmd(USART6, ENABLE);
 	USART_ClearFlag(USART6, USART_FLAG_TC);
-	
-	//nvic_config(USART6_IRQn, 4);
+#ifndef DEBUG_HAHA
+	nvic_config(USART6_IRQn, 4);
+#endif
 }
 
 //重定向printf函数
@@ -104,13 +107,24 @@ void usart_sendBytes(USART_TypeDef *usart, u8 *buffer, u16 len)
 	}
 }
 
-void UART4_IRQHandler(void)
+__IO uint8_t signal = 'p';
+void USART6_IRQHandler(void)
 {
-	if(USART_GetFlagStatus(UART4,USART_FLAG_RXNE)==SET)
+	if(USART_GetFlagStatus(USART6,USART_FLAG_RXNE)==SET)
 	{
-		USART_ReceiveData(UART4);
-		USART_ClearITPendingBit(UART4,USART_IT_RXNE);
-
+		signal = USART_ReceiveData(USART6);
+		USART_ClearITPendingBit(USART6,USART_IT_RXNE);
 	}
 }
 
+void usart_wait_signal(void)
+{
+	signal = 'p';
+	while(signal != 'a');
+	signal = 'p';
+}
+
+void usart_send_signal(void)
+{
+	usart_sendByte(USART6, 'a');
+}

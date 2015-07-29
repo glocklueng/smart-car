@@ -8,7 +8,6 @@ void spi_config(void)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 	gpio_af_pp_up_init(GPIOB, GPIO_Pin_4);
 	gpio_af_pp_up_init(GPIOA, GPIO_Pin_5|GPIO_Pin_7);
-	gpio_out_pp_up_init(GPIOA, GPIO_Pin_3);	//片选引脚
 	
 	GPIO_PinAFConfig(GPIOB,GPIO_PinSource4,GPIO_AF_SPI1);
 	GPIO_PinAFConfig(GPIOA,GPIO_PinSource5,GPIO_AF_SPI1);
@@ -25,7 +24,7 @@ void spi_config(void)
 	SPI_InitStructure.SPI_CRCPolynomial = 7;							//CRC值计算的多项式
 	SPI_Init(SPI1, &SPI_InitStructure);
 	SPI_Cmd(SPI1, ENABLE);
-	T_CS = 0;	//触摸屏片选有效
+//	T_CS = 0;	//触摸屏片选有效
 }
 
 uint8_t spi_read_write_byte(uint8_t txData)

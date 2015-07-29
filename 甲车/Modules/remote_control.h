@@ -3,13 +3,11 @@
 
 #include "stm32f4xx.h"
 
-#define STATE1	1
-#define STATE2	2
-#define STATE3	3
-#define STATE4	4
-#define STATE5	5
-#define STATE6	6
-#define STATE7	7
+#define MODE_SINGLE 	1
+#define MODE_CONNECT	0
+
+extern uint8_t car_mode;
+extern __IO uint8_t remote_flag;
 
 void remote_control_init(void);
 
